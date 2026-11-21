@@ -1,0 +1,79 @@
+# Server stack: TEST and PRODUCTION side by side on one VPS, fully isolated
+# (separate containers, databases, upload volumes and settings).
+#
+#   https://shreeramtrading.in        -> app-prod -> db-prod
+#   https://test.shreeramtrading.in   -> app-test -> db-test   (password protected)
+#
+# Image tags live in deploy/.env (TEST_TAG / PROD_TAG) and are changed only by deploy.sh.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      PROD_DOMAIN: ${PROD_DOMAIN}
+      TEST_DOMAIN: ${TEST_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [app-prod, app-test]
+
+  # ---------------- Production ----------------
+  app-prod:
+    image: ${IMAGE}:${PROD_TAG}
+    restart: unless-stopped
+    env_file: ./env/prod.env
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql://srt:${PROD_DB_PASSWORD}@db-prod:5432/srt?schema=public
+    volumes: ["uploads-prod:/data/uploads"]
+    depends_on:
+      db-prod: { condition: service_healthy }
+
+  db-prod:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: srt
+      POSTGRES_PASSWORD: ${PROD_DB_PASSWORD}
+      POSTGRES_DB: srt
+    volumes: ["db-prod:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U srt -d srt"]
+      interval: 10s
+      retries: 5
+
+  # ---------------- Test ----------------
+  app-test:
+    image: ${IMAGE}:${TEST_TAG}
+    restart: unless-stopped
+    env_file: ./env/test.env
+    environment:
+      APP_ENV: test
+      DATABASE_URL: postgresql://srt:${TEST_DB_PASSWORD}@db-test:5432/srt?schema=public
+    volumes: ["uploads-test:/data/uploads"]
+    depends_on:
+      db-test: { condition: service_healthy }
+
+  db-test:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: srt
+      POSTGRES_PASSWORD: ${TEST_DB_PASSWORD}
+      POSTGRES_DB: srt
+    volumes: ["db-test:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U srt -d srt"]
+      interval: 10s
+      retries: 5
+
+volumes:
+  caddy-data:
+  caddy-config:
+  uploads-prod:
+  uploads-test:
+  db-prod:
+  db-test:

@@ -1,0 +1,281 @@
+// Shree Ram Trading Company — data model
+// All money values are stored as integer paise (₹1 = 100) to avoid rounding errors.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Catalogue ----------
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  sortOrder Int       @default(0)
+  products  Product[]
+}
+
+model Product {
+  id               String         @id @default(cuid())
+  name             String
+  slug             String         @unique
+  shortDescription String?
+  description      String         @default("")
+  categoryId       String?
+  category         Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  unit             String         @default("500 g") // pack size shown to buyers
+  origin           String? // e.g. "California", "Kashmir"
+  tags             String[]       @default([])
+
+  // Retail pricing
+  mrp              Int // paise
+  discountPct      Int            @default(0) // 0–90
+  price            Int // paise, = mrp * (100 - discountPct) / 100, computed on save
+  stock            Int            @default(0)
+
+  // Corporate / bulk pricing
+  corporateEnabled Boolean        @default(false)
+  moq              Int? // minimum order quantity in packs
+  corporatePrice   Int? // paise per pack when buying >= moq
+
+  isActive         Boolean        @default(true)
+  isFeatured       Boolean        @default(false)
+  ratingAvg        Float          @default(0)
+  ratingCount      Int            @default(0)
+
+  images           ProductImage[]
+  reviews          Review[]
+  orderItems       OrderItem[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([isActive, isFeatured])
+  @@index([categoryId])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String  @default("")
+  sortOrder Int     @default(0)
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReviewSource {
+  CUSTOMER
+  ADMIN
+}
+
+model Review {
+  id        String       @id @default(cuid())
+  productId String
+  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  city      String?
+  rating    Int // 1–5
+  title     String?
+  body      String
+  status    ReviewStatus @default(PENDING)
+  source    ReviewSource @default(CUSTOMER)
+  createdAt DateTime     @default(now())
+
+  @@index([productId, status])
+}
+
+// ---------- Orders ----------
+
+enum CustomerType {
+  RETAIL
+  CORPORATE
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT // order placed, waiting for UPI payment
+  PAYMENT_SUBMITTED // customer entered UTR / uploaded screenshot
+  CONFIRMED // owner verified the money arrived
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  UPI
+  COD
+}
+
+model Order {
+  id                String       @id @default(cuid())
+  orderNumber       String       @unique
+  customerType      CustomerType @default(RETAIL)
+  name              String
+  phone             String
+  email             String?
+  companyName       String?
+  gstin             String?
+  addressLine       String
+  city              String
+  state             String
+  pincode           String
+  notes             String?
+  subtotal          Int
+  discount          Int           @default(0) // coupon discount, paise
+  couponCode        String?
+  shipping          Int
+  codFee            Int           @default(0)
+  total             Int
+  paymentMethod     PaymentMethod @default(UPI)
+  status            OrderStatus  @default(PENDING_PAYMENT)
+  paymentRef        String? // UPI transaction id / UTR
+  paymentScreenshot String?
+  paymentSubmittedAt DateTime?
+  paidAt            DateTime?
+  sessionId         String? // links the order to analytics
+  items             OrderItem[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([status, createdAt])
+  @@index([phone])
+}
+
+model OrderItem {
+  id        String       @id @default(cuid())
+  orderId   String
+  order     Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name      String
+  unit      String
+  priceType CustomerType @default(RETAIL)
+  unitPrice Int
+  qty       Int
+  lineTotal Int
+}
+
+// ---------- Coupons ----------
+
+enum CouponKind {
+  PERCENT
+  FLAT
+}
+
+model Coupon {
+  id           String     @id @default(cuid())
+  code         String     @unique // stored upper-case, e.g. DIWALI10
+  kind         CouponKind @default(PERCENT)
+  value        Int // percent (1–90) or paise for FLAT
+  minOrder     Int        @default(0) // paise
+  maxDiscount  Int? // paise cap for PERCENT coupons
+  forCorporate Boolean    @default(false) // also valid when the cart has bulk-priced lines
+  expiresAt    DateTime?
+  usageLimit   Int?
+  usedCount    Int        @default(0)
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+}
+
+// ---------- Unfinished checkouts (for WhatsApp follow-up) ----------
+
+model CheckoutLead {
+  id          String    @id @default(cuid())
+  sessionId   String    @unique // one lead per browsing session
+  phone       String
+  name        String?
+  cart        Json // [{ name, unit, qty, mode }]
+  subtotal    Int
+  orderId     String? // set when the checkout turns into an order
+  contactedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([createdAt])
+}
+
+// ---------- Corporate enquiries ----------
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  WON
+  LOST
+}
+
+model CorporateEnquiry {
+  id          String        @id @default(cuid())
+  companyName String
+  contactName String
+  phone       String
+  email       String?
+  gstin       String?
+  city        String?
+  occasion    String? // Diwali gifting, canteen supply, hotel, etc.
+  quantity    String?
+  budget      String?
+  message     String
+  status      EnquiryStatus @default(NEW)
+  ownerNotes  String?
+  createdAt   DateTime      @default(now())
+}
+
+// ---------- Admin ----------
+
+enum AdminRole {
+  OWNER
+  STAFF
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         AdminRole @default(OWNER)
+  createdAt    DateTime  @default(now())
+}
+
+// Key/value store for shop settings (UPI id, shipping fee, contact numbers…)
+model Setting {
+  key   String @id
+  value String
+}
+
+// ---------- Analytics (first-party, no personal data) ----------
+
+model AnalyticsEvent {
+  id          BigInt   @id @default(autoincrement())
+  type        String // page_view | product_view | add_to_cart | begin_checkout | order_placed | search | enquiry_submitted
+  visitorId   String // long-lived anonymous id (1 year)
+  sessionId   String // 30-minute rolling id
+  isNewVisitor Boolean @default(false)
+  path        String
+  productId   String?
+  value       Int? // paise, for cart / order events
+  query       String? // search term
+  resultCount Int?
+  referrer    String? // referring domain
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  device      String? // mobile | tablet | desktop
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+  @@index([sessionId])
+  @@index([productId, type])
+}

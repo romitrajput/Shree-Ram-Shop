@@ -1,0 +1,13 @@
+# Caddy gets and renews HTTPS certificates automatically.
+{$PROD_DOMAIN}, www.{$PROD_DOMAIN} {
+	@www host www.{$PROD_DOMAIN}
+	redir @www https://{$PROD_DOMAIN}{uri} permanent
+	encode zstd gzip
+	reverse_proxy app-prod:3000
+}
+
+{$TEST_DOMAIN} {
+	encode zstd gzip
+	header X-Robots-Tag "noindex, nofollow"
+	reverse_proxy app-test:3000
+}

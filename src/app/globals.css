@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-paper font-body text-ink antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-ink;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+  :focus-visible {
+    outline: 3px solid #f2a900;
+    outline-offset: 2px;
+  }
+  /* Browser surfaces carry the palette too */
+  ::selection {
+    background: #fff3d1;
+    color: #1e1a16;
+  }
+  input,
+  textarea,
+  select {
+    caret-color: #2f4a2a;
+    accent-color: #2f4a2a;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: #2f4a2a;
+  }
+  /* Fields scrolled into view (e.g. after a validation error) clear the sticky header */
+  input,
+  select,
+  textarea,
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-pista text-white hover:bg-pista-dark;
+  }
+  .btn-accent {
+    @apply btn bg-marigold text-ink hover:brightness-95;
+  }
+  .btn-ghost {
+    @apply btn border border-paper-line bg-white text-ink hover:border-ink-mute;
+  }
+  .btn-danger {
+    @apply btn border border-khata/30 bg-white text-khata hover:bg-khata-light;
+  }
+  .input {
+    @apply w-full rounded-lg border border-paper-line bg-white px-3 py-2 text-[15px] text-ink placeholder:text-ink-mute focus:border-pista focus:outline-none focus:ring-2 focus:ring-pista/20;
+  }
+  .input[aria-invalid="true"] {
+    @apply border-khata focus:ring-khata/20;
+  }
+  .input-file {
+    @apply block w-full text-sm text-ink-soft file:mr-3 file:cursor-pointer file:rounded-full file:border file:border-paper-line file:bg-white file:px-4 file:py-2 file:text-sm file:font-semibold file:text-ink hover:file:border-ink-mute;
+  }
+  .label {
+    @apply mb-1 block text-sm font-medium text-ink-soft;
+  }
+  .card {
+    @apply rounded-tile border border-paper-line bg-white;
+  }
+  .rate-num {
+    font-variant-numeric: tabular-nums;
+  }
+}
