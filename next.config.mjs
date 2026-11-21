@@ -2,8 +2,12 @@
 const isTest = process.env.APP_ENV === "test";
 
 const nextConfig = {
-  output: "standalone",
+  // Netlify builds with its own Next.js adapter; Docker uses the standalone server.
+  output: process.env.NETLIFY ? undefined : "standalone",
   poweredByHeader: false,
+  // On Netlify, build-time settings from netlify.toml aren't visible to the
+  // running functions, so bake these two in.
+  env: process.env.NETLIFY ? { STORAGE: process.env.STORAGE || "netlify", APP_ENV: process.env.APP_ENV || "test" } : {},
   experimental: {
     serverActions: {
       bodySizeLimit: "8mb", // product image uploads

@@ -1,0 +1,8 @@
+# Netlify test site. Database: Neon (set DATABASE_URL in Netlify).
+[build]
+  command = "npm run build:netlify"
+
+[build.environment]
+  NODE_VERSION = "20"
+  STORAGE = "netlify"
+  APP_ENV = "test"
