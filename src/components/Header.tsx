@@ -7,7 +7,6 @@ import { useCart } from "./CartProvider";
 
 const NAV = [
   { href: "/products", label: "Shop" },
-  { href: "/corporate", label: "Corporate & bulk" },
   { href: "/track", label: "Track order" }
 ];
 

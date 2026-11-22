@@ -23,7 +23,8 @@ type P = {
 
 export function BuyBox({ product: p, initialMode }: { product: P; initialMode: PriceMode }) {
   const { add } = useCart();
-  const bulkAvailable = p.corporateEnabled && !!p.corporatePrice && !!p.moq;
+  // Retail shoppers never see bulk pricing; corporate buyers arrive from /corporate with ?buy=bulk.
+  const bulkAvailable = initialMode === "CORPORATE" && p.corporateEnabled && !!p.corporatePrice && !!p.moq;
   const [mode, setMode] = useState<PriceMode>(bulkAvailable ? initialMode : "RETAIL");
   const minQty = mode === "CORPORATE" ? p.moq! : 1;
   const [qty, setQty] = useState(minQty);

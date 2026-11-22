@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { quickUpdateProduct } from "../actions";
+import { ProductImage } from "@/components/ProductBits";
+import { DeleteProduct } from "./DeleteProduct";
 
 type P = { id: string; name: string; unit: string; image?: string; stock: number; discountPct: number; price: string; isActive: boolean };
 
@@ -40,11 +42,16 @@ export function StockCard({ p }: { p: P }) {
   return (
     <li className={`px-4 py-3 ${p.isActive ? "" : "opacity-60"}`}>
       <div className="flex items-start justify-between gap-3">
-        <Link href={`/admin/products/${p.id}`} className="min-w-0">
-          <span className="block font-semibold">{p.name}</span>
-          <span className="block text-sm text-ink-mute">
-            {p.unit} · {p.price}
-            {p.isActive ? "" : " · Hidden"}
+        <Link href={`/admin/products/${p.id}`} className="flex min-w-0 items-center gap-3">
+          <span className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-paper-line">
+            <ProductImage src={p.image} alt={p.name} />
+          </span>
+          <span className="min-w-0">
+            <span className="block font-semibold">{p.name}</span>
+            <span className="block text-sm text-ink-mute">
+              {p.unit} · {p.price}
+              {p.isActive ? "" : " · Hidden"}
+            </span>
           </span>
         </Link>
         <span className="shrink-0 text-xs text-ink-mute" aria-live="polite">
@@ -86,6 +93,7 @@ export function StockCard({ p }: { p: P }) {
           %
         </label>
       </div>
+      <DeleteProduct id={p.id} name={p.name} />
     </li>
   );
 }

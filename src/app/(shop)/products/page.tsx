@@ -59,11 +59,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         <div className="mt-16 max-w-md">
           <p className="text-lg font-medium">No products match that search.</p>
           <p className="mt-2 text-ink-soft">
-            Try a shorter word like “kaju” or “badam”, or{" "}
-            <Link href="/corporate#enquiry" className="text-pista underline">
-              ask us to source it
-            </Link>
-            .
+            Try a shorter word like “kaju” or “badam”.
           </p>
         </div>
       ) : (

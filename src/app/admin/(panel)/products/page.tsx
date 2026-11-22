@@ -5,6 +5,7 @@ import { rupees } from "@/lib/format";
 import { ProductImage } from "@/components/ProductBits";
 import { quickUpdateProduct } from "../actions";
 import { StockCard } from "./StockCard";
+import { DeleteProduct } from "./DeleteProduct";
 
 export default async function AdminProducts({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   await requireAdmin();
@@ -53,6 +54,7 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
                 <th className="px-4 py-3 font-medium">Discount % · Stock</th>
                 <th className="px-4 py-3 font-medium">Bulk</th>
                 <th className="px-4 py-3 font-medium">Rating</th>
+                <th className="px-4 py-3 font-medium"><span className="sr-only">Delete</span></th>
               </tr>
             </thead>
             <tbody className="rate-num divide-y divide-paper-line">
@@ -94,6 +96,9 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
                   </td>
                   <td className="px-4 py-3 text-sm">{p.corporateEnabled ? `${rupees(p.corporatePrice ?? 0)} · MOQ ${p.moq}` : "—"}</td>
                   <td className="px-4 py-3 text-sm">{p.ratingCount ? `${p.ratingAvg.toFixed(1)} (${p.ratingCount})` : "—"}</td>
+                  <td className="px-4 py-3">
+                    <DeleteProduct id={p.id} name={p.name} />
+                  </td>
                 </tr>
               ))}
             </tbody>

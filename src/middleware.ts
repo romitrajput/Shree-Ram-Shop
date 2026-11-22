@@ -37,7 +37,8 @@ export async function middleware(req: NextRequest) {
     if (!ok) {
       const url = req.nextUrl.clone();
       url.pathname = "/admin/login";
-      url.searchParams.set("next", pathname);
+      // Plain /admin lands on Orders after login (the daily job); deeper links return to where they were.
+      if (pathname !== "/admin") url.searchParams.set("next", pathname);
       return NextResponse.redirect(url);
     }
   }

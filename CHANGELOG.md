@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.0 – 22 Nov 2026 (phone fixes, corporate split)
+
+Fixes
+- Uploaded photos now load: `.gitignore` was dropping the route that serves them (`src/app/api/uploads`).
+- Phones always get the mobile layout (explicit viewport).
+- New products show on the home page straight away (rate board lists newest first, up to 12).
+- After login, plain `/admin` opens Orders.
+
+Approved from the decision cards
+- Home: category chips under the main heading; duplicate product grid removed (rate board + "See all products"); WhatsApp button steps aside on phones while the rate board is on screen.
+- Corporate is separate from retail: removed from the header, hero and home page; footer link "For businesses". Bulk prices on product pages show only for buyers arriving from /corporate (`?buy=bulk`).
+- Admin products: Delete on every product (two-step), photo thumbnails on the phone list.
+
 ## 1.1.0 – 20 Nov 2026 (feature audit)
 
 Approved by the owner from the feature-audit decision cards.

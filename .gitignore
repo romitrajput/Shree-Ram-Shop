@@ -1,7 +1,7 @@
 node_modules
 .next
 out
-uploads
+/uploads
 .env
 .env.*
 !.env.example

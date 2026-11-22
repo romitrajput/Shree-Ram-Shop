@@ -66,8 +66,15 @@ test("quick add from a product card updates the cart", async ({ page }) => {
   expect(await cartCount(page)).toBe(1);
 });
 
-test("bulk buying enforces the minimum order quantity", async ({ page }) => {
+test("retail product pages hide bulk prices; corporate buyers get them via ?buy=bulk", async ({ page }) => {
   await page.goto(`/products/${ALMONDS.slug}`);
+  await expect(page.getByRole("button", { name: /Bulk \(/ })).toHaveCount(0);
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: /corporate/i })).toHaveCount(0); // home is retail only
+});
+
+test("bulk buying enforces the minimum order quantity", async ({ page }) => {
+  await page.goto(`/products/${ALMONDS.slug}?buy=bulk`);
   await page.getByRole("button", { name: /Bulk \(\d+\+ packs\)/ }).click();
   const moq = Number((await page.getByRole("button", { name: /Bulk/ }).innerText()).match(/\d+/)![0]);
   await expect(page.getByRole("spinbutton", { name: "Quantity" })).toHaveValue(String(moq));

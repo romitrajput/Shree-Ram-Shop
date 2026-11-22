@@ -7,8 +7,8 @@ export const metadata = { title: "Owner login", robots: { index: false } };
 
 async function login(form: FormData) {
   "use server";
-  const next = String(form.get("next") || "/admin");
-  const safeNext = next.startsWith("/admin") ? next : "/admin";
+  const next = String(form.get("next") || "/admin/orders");
+  const safeNext = next.startsWith("/admin") ? next : "/admin/orders";
   if (await tooManyFailures("login", 8)) redirect("/admin/login?error=locked");
   const ok = await signIn(String(form.get("email") || ""), String(form.get("password") || ""));
   if (!ok) await recordFailure("login", 15 * 60 * 1000);
@@ -16,7 +16,7 @@ async function login(form: FormData) {
 }
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
-  if (await getAdmin()) redirect("/admin");
+  if (await getAdmin()) redirect("/admin/orders");
   const sp = await searchParams;
   return (
     <div className="min-h-screen bg-paper">
@@ -28,7 +28,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             {sp.error === "locked" ? "Too many attempts. Wait 15 minutes and try again." : "Email or password is wrong."}
           </p>
         ) : null}
-        <input type="hidden" name="next" value={sp.next ?? "/admin"} />
+        <input type="hidden" name="next" value={sp.next ?? "/admin/orders"} />
         <div>
           <label className="label" htmlFor="email">
             Email

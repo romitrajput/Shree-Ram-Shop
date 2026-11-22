@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: { type: "website", siteName: "Shree Ram Trading Company", locale: "en_IN" }
 };
 
-export const viewport: Viewport = { themeColor: "#2F4A2A" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#2F4A2A" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const clarity = process.env.CLARITY_ID;

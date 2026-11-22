@@ -19,7 +19,7 @@ export function Footer({ settings }: { settings: ShopSettings }) {
             All dry fruits
           </Link>
           <Link className="block hover:text-marigold" href="/corporate">
-            Corporate & bulk orders
+            For businesses
           </Link>
           <Link className="block hover:text-marigold" href="/track">
             Track your order

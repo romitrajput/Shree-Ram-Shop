@@ -9,7 +9,7 @@ async function login(page: Page) {
   await page.getByLabel("Email").fill(EMAIL);
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Log in" }).click();
-  await expect(page.getByRole("heading", { name: "Analytics" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Orders", level: 1 })).toBeVisible();
 }
 
 test("admin pages need a login and reject a wrong password", async ({ page }) => {
@@ -23,6 +23,7 @@ test("admin pages need a login and reject a wrong password", async ({ page }) =>
 
 test("owner sees the analytics dashboard with growth suggestions", async ({ page }) => {
   await login(page);
+  await page.goto("/admin");
   for (const label of ["Visitors", "Orders", "Revenue", "Visits that order"]) await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Needs attention" })).toBeVisible();
   await page.getByRole("link", { name: /7 days/ }).click();
@@ -95,4 +96,22 @@ test("phones get a bottom bar; stock saves from the products list", async ({ pag
   await bar.getByRole("link", { name: /Products/ }).click();
   await page.getByRole("button", { name: "Add stock" }).first().click();
   await expect(page.getByText("Saved").first()).toBeVisible();
+});
+
+test("a new product shows on the home page and can be deleted from the list", async ({ page }) => {
+  await login(page);
+  await page.goto("/admin/products/new");
+  const name = `E2E Walnuts ${Date.now().toString(36)}`;
+  await page.getByLabel("Name", { exact: true }).fill(name);
+  await page.getByLabel("MRP (₹)").fill("500");
+  await page.getByLabel("Packs in stock").fill("20");
+  await page.getByRole("button", { name: "Add product" }).click();
+  await expect(page.getByText("Product created")).toBeVisible();
+  await page.goto("/");
+  await expect(page.getByRole("link", { name }).first()).toBeVisible();
+  await page.goto(`/admin/products?q=${encodeURIComponent(name)}`);
+  const row = page.locator("li:visible, tr:visible").filter({ hasText: name });
+  await row.getByText("Delete", { exact: true }).click();
+  await row.getByRole("button", { name: `Yes, delete ${name}` }).click();
+  await expect(page.getByText(name)).toHaveCount(0);
 });
