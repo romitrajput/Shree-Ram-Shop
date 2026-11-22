@@ -51,7 +51,7 @@ export async function saveImage(file: File, folder: "products" | "payments" | "s
 }
 
 /** Returns the file's bytes, or null if missing or the path is unsafe. */
-export async function readImage(parts: string[]): Promise<Uint8Array | null> {
+export async function readImage(parts: string[]): Promise<Uint8Array<ArrayBuffer> | null> {
   if (parts.some((p) => !p || p === "." || p === ".." || p.includes("/") || p.includes("\\"))) return null;
   if (USE_BLOBS) {
     const store = await blobStore();
